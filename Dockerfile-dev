@@ -1,0 +1,15 @@
+FROM docker
+
+RUN apk add --no-cache python2 py-setuptools \
+  && /usr/bin/easy_install-2.7 pip
+
+WORKDIR /usr/src/app
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY runlike/runlike.py .
+COPY runlike/inspector.py .
+COPY runlike/__init__.py .
+
+ENTRYPOINT [ "/usr/src/app/runlike.py" ]

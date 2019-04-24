@@ -152,6 +152,11 @@ class Inspector(object):
         hosts = self.get_fact("HostConfig.ExtraHosts") or []
         self.options += ['--add-host %s' % host for host in hosts]
 
+    def parse_entrypoint(self):
+        entrypoint_parts = self.get_fact("Config.Entrypoint")
+        if entrypoint_parts is not None:
+          self.options.append('--entrypoint %s' % entrypoint_parts[0])
+
     def format_cli(self):
         self.output = "docker run "
 
@@ -185,6 +190,7 @@ class Inspector(object):
         self.parse_labels()
         self.parse_log()
         self.parse_extra_hosts()
+        self.parse_entrypoint()
 
         stdout_attached = self.get_fact("Config.AttachStdout")
         if not stdout_attached:
@@ -200,10 +206,18 @@ class Inspector(object):
 
         cmd_parts = self.get_fact("Config.Cmd")
 
+        entrypoint_parts = self.get_fact("Config.Entrypoint")
+
         def quote(part):
             if re.search(r'\s', part):
                 return "'%s'" % part.replace("'", r"\'")
             return part
+
+        if entrypoint_parts:
+            quoted = [quote(p) for p in entrypoint_parts[1:]]
+            if len(quoted) > 0:
+              command = " ".join(quoted)
+              parameters.append(command)
 
         if cmd_parts:
             quoted = [quote(p) for p in cmd_parts]
